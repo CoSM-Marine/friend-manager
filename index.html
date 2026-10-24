@@ -153,7 +153,7 @@ async function resolveUsernames(){
       });
 
       if(!response.ok){
-        throw new Error(`Roblox returned HTTP ${response.status}`);
+        throw new Error(`Username lookup returned HTTP ${response.status}.`);
       }
 
       const data = await response.json();
