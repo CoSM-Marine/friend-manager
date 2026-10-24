@@ -41,7 +41,11 @@ main{max-width:900px;margin:auto;padding:20px 14px 50px}.hero{padding:20px 4px 1
 <button id="selectVisible" class="secondary">Select visible</button>
 <button id="clearSelection" class="secondary">Clear selection</button>
 </div>
-<div id="friends"><div class="empty">Load a friend list to begin.</div></div>
+<div class="actions">
+  <button id="resolveBtn" class="secondary">Resolve usernames</button>
+</div>
+<p class="small">Looks up missing usernames using public Roblox data. If Roblox blocks the request, your friend list remains available to export.</p>
+  <div id="friends"><div class="empty">Load a friend list to begin.</div></div>
 <div class="actions"><button id="exportAll">Download all as CSV</button><button id="exportSelected" class="secondary">Download selected CSV</button><button id="openSelected" class="secondary">Open selected profiles</button></div>
 <p class="small">CSV columns match the original importer: <code>userId,username,displayName</code>. You can import the downloaded file into Friend Manager later.</p>
 </section>
@@ -115,7 +119,68 @@ async function fetchFriends(){
     status("The browser could not fetch the list directly. This can happen because of Roblox browser security (CORS).\n\nNext: tap “Open Roblox data,” copy the JSON text from that page, return here, paste it into the box, and tap “Load pasted JSON.”\n\nTechnical detail: "+e.message);
   }finally{$("fetchBtn").disabled=false;}
 }
-function csvEscape(v){return '"'+String(v??"").replace(/"/g,'""')+'"';}
+async function resolveUsernames(){
+  if(!friends.length){
+    status("Load your friend list first.");
+    return;
+  }
+
+  const unresolved = friends.filter(f => !f.username);
+  if(!unresolved.length){
+    status("All loaded friends already have usernames.");
+    return;
+  }
+
+  const btn = $("resolveBtn");
+  btn.disabled = true;
+  let updated = 0;
+
+  try {
+    for(let start = 0; start < unresolved.length; start += 100){
+      const batch = unresolved.slice(start, start + 100);
+      status(`Looking up batch ${Math.floor(start / 100) + 1}…`);
+
+      const response = await fetch("https://users.roblox.com/v1/users", {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userIds: batch.map(f => Number(f.userId)),
+          excludeBannedUsers: false
+        })
+      });
+
+      if(!response.ok){
+        throw new Error(`Roblox returned HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      const byId = new Map((data.data || []).map(u => [String(u.id), u]));
+
+      for(const friend of batch){
+        const user = byId.get(friend.userId);
+        if(!user) continue;
+        if(user.name){
+          friend.username = user.name;
+          updated++;
+        }
+        if(user.displayName) friend.displayName = user.displayName;
+      }
+
+      render();
+    }
+
+    status(`Finished! Resolved ${updated} usernames. Export your CSV to save the results.`);
+  } catch(error) {
+    status("Roblox blocked or failed the lookup. Your friend list is still loaded.\n\nExport your CSV as a backup. Technical detail: " + error.message);
+  } finally {
+    btn.disabled = false;
+    render();
+  }
+}
+  function csvEscape(v){return '"'+String(v??"").replace(/"/g,'""')+'"';}
 function download(filename, rows){
   const csv=rows.map(row=>row.map(csvEscape).join(",")).join("\r\n");
   const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});const url=URL.createObjectURL(blob);
@@ -123,7 +188,8 @@ function download(filename, rows){
 }
 function exportFriends(list,filename){download(filename,[["userId","username","displayName"],...list.map(f=>[f.userId,f.username,f.displayName])]);}
 $("fetchBtn").addEventListener("click",fetchFriends);
-$("parseBtn").addEventListener("click",()=>{
+$("resolveBtn").addEventListener("click",resolveUsernames);
+  $("parseBtn").addEventListener("click",()=>{
   try{const obj=JSON.parse($("jsonInput").value);const items=normalizeItems(obj);if(!items)throw new Error("Could not find a friend array in that JSON. Copy the entire response from the Roblox data page.");loadItems(items,"pasted JSON");}
   catch(e){status("Could not load JSON: "+e.message);}
 });
