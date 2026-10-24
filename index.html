@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101322">
+<title>Friend Manager</title>
+<style>
+:root{color-scheme:dark;--bg:#0d1020;--panel:#171b2d;--panel2:#20253a;--line:#303751;--text:#f4f5ff;--muted:#aab2cc;--blue:#5b7cfa;--purple:#a64df5;--green:#36c993;--red:#ff777f}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1b2040 0%,var(--bg) 58%);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);min-height:100vh}
+button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:var(--panel2);color:var(--text);font-weight:650}button:active{transform:scale(.985)}button.primary{border:0;background:linear-gradient(110deg,var(--blue),var(--purple))}button.ghost{background:transparent}button:disabled{opacity:.45;cursor:not-allowed}
+.wrap{max-width:760px;margin:0 auto;padding:env(safe-area-inset-top) 14px calc(28px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;padding:24px 3px 18px;gap:12px}.brand{font-size:22px;font-weight:850;letter-spacing:-.5px}.brand span{background:linear-gradient(90deg,#91a8ff,#d28bff);color:transparent;background-clip:text}.pill{font-size:12px;color:#cbd3ff;border:1px solid #454d79;padding:5px 9px;border-radius:99px;white-space:nowrap}
+.intro{padding:18px 18px 20px;background:linear-gradient(135deg,#202748,#19182f);border:1px solid #343b60;border-radius:20px;margin-bottom:14px}.intro h1{font-size:26px;line-height:1.12;margin:0 0 8px}.intro p{margin:0;color:var(--muted)}
+.notice{background:#2a202c;border:1px solid #8b4c65;border-radius:14px;padding:12px 14px;color:#ffdce7;font-size:13px;margin:12px 0}.notice strong{display:block;margin-bottom:3px}
+.panel{background:rgba(23,27,45,.96);border:1px solid var(--line);border-radius:18px;padding:14px;margin:12px 0}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}.search{width:100%;background:#101426;border:1px solid #39415f;color:var(--text);border-radius:12px;padding:13px 14px;outline:none}.search:focus{border-color:#879aff}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.tools select{width:100%;padding:11px;background:#20253a;border:1px solid var(--line);border-radius:12px;color:var(--text)}
+.stats{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:13px;margin:12px 2px}
+.friend{display:flex;align-items:center;gap:11px;padding:11px;background:#1b2032;border:1px solid #2e354f;border-radius:14px;margin:8px 0;min-height:78px}.friend.selected{border-color:#748aff;background:#222846}.avatar{width:43px;height:43px;border-radius:14px;background:linear-gradient(135deg,#516cf3,#bd5bf3);display:grid;place-items:center;font-size:17px;font-weight:800;flex-shrink:0}.identity{min-width:0;flex:1}.display{font-weight:750;overflow-wrap:anywhere}.username{color:var(--muted);font-size:13px;overflow-wrap:anywhere}.friend input{width:22px;height:22px;accent-color:#7b6bff;flex-shrink:0}
+.actions{position:sticky;bottom:8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;padding:9px;background:#111426ed;border:1px solid #303751;border-radius:16px;backdrop-filter:blur(14px);margin-top:12px}.actions button{padding:12px 5px;font-size:13px}
+h2{font-size:17px;margin:0 0 10px}.small{font-size:13px;color:var(--muted)}.empty{text-align:center;color:var(--muted);padding:25px 10px}
+.hidden{display:none!important}.review-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.review-item:last-child{border-bottom:0}.review-item .identity{flex:1}.review-item label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+footer{text-align:center;color:#818ba9;font-size:12px;padding:18px 8px}
+.modal{position:fixed;inset:0;background:#050711d9;z-index:10;display:flex;align-items:flex-end;justify-content:center;padding:12px}.sheet{background:#171b2d;border:1px solid #414967;border-radius:22px 22px 16px 16px;width:100%;max-width:740px;max-height:85vh;overflow:auto;padding:18px}.sheethead{display:flex;justify-content:space-between;align-items:center;gap:10px}.sheethead button{padding:7px 12px}
+.importrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.filelabel{display:inline-block;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--panel2);font-weight:650;cursor:pointer}.filelabel input{display:none}
+@media(min-width:600px){.wrap{padding-left:22px;padding-right:22px}.friend{padding:13px}.intro h1{font-size:32px}.actions{position:static}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div class="brand">✦ <span>Friend Manager</span></div><div class="pill">MOBILE FRIENDLY</div></header>
+<section class="intro"><h1>Clean up your friends list.<br>On your terms.</h1><p>Search, select, review, and track your progress from your phone.</p></section>
+<div class="notice"><strong>Important: manual removal only</strong>This prototype cannot access your Roblox account or unfriend people automatically. It opens profile links so you can remove friends yourself in Roblox. Never enter your Roblox password or session cookie into a third-party tool.</div>
+<section class="panel">
+<h2>Your list</h2>
+<div class="importrow">
+<label class="filelabel">Import friend CSV <input id="csvFile" type="file" accept=".csv,text/csv"></label>
+<button id="demoBtn" class="ghost">Load demo list</button>
+<button id="exportBtn" class="ghost">Export list</button>
+</div>
+<p class="small">CSV columns: <code>userId,username,displayName</code>. This starter has demo entries only until you import data you are authorized to use.</p>
+</section>
+<section class="panel">
+<input id="search" class="search" placeholder="Search username or display name…" autocomplete="off">
+<div class="tools">
+<select id="sort"><option value="display">Sort: Display name</option><option value="username">Sort: Username</option></select>
+<select id="filter"><option value="all">Show: All friends</option><option value="selected">Selected only</option><option value="remaining">Not marked removed</option><option value="done">Marked removed</option></select>
+</div>
+<div class="stats"><span id="total">0 friends</span><span id="count">0 selected</span></div>
+<div id="friends"></div>
+<div class="actions">
+<button id="selectAll">Select visible</button><button id="clear">Clear selection</button><button id="review" class="primary">Review (0)</button>
+</div>
+</section>
+<footer>Friend Manager prototype · Your selections stay in this browser tab. No passwords or cookies collected.</footer>
+</div>
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="reviewTitle">
+<div class="sheet">
+<div class="sheethead"><h2 id="reviewTitle">Review selected friends</h2><button id="closeModal" aria-label="Close">✕</button></div>
+<p class="small">Open each profile in Roblox, remove the friend manually if you choose, then return here and mark the task complete.</p>
+<div id="reviewList"></div>
+<div class="toolbar" style="margin-top:14px"><button id="openNext" class="primary">Open next uncompleted profile</button><button id="closeBottom">Done</button></div>
+<p id="reviewStatus" class="small"></p>
+</div>
+</div>
+<script>
+const demoFriends=[
+ {userId:"1",username:"StarGalaxy",displayName:"Star Galaxy"},
+ {userId:"2",username:"CosmicDev",displayName:"CosmicDev"},
+ {userId:"3",username:"PixelNinja",displayName:"Pixel Ninja"},
+ {userId:"4",username:"FireDragon",displayName:"FireDragon"},
+ {userId:"5",username:"MoonLight",displayName:"Moon Light"},
+ {userId:"6",username:"ShadowFox",displayName:"ShadowFox"},
+ {userId:"7",username:"CosmoPlayz",displayName:"Cosmo Playz"},
+ {userId:"8",username:"CosmicWolf",displayName:"Cosmic Wolf"},
+ {userId:"9",username:"CosmicQueen",displayName:"Cosmic Queen"},
+ {userId:"10",username:"BlueComet",displayName:"Blue Comet"}
+];
+let friends=[],selected=new Set(),completed=new Set();
+const $=id=>document.getElementById(id);
+const safe=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function profileUrl(f){return /^\d+$/.test(String(f.userId||"")) && f.userId!=="0" ? `https://www.roblox.com/users/${encodeURIComponent(f.userId)}/profile` : `https://www.roblox.com/search/users?keyword=${encodeURIComponent(f.username)}`;}
+function visibleFriends(){
+ let q=$("search").value.trim().toLowerCase(),filter=$("filter").value;
+ let a=friends.filter(f=>(String(f.username).toLowerCase().includes(q)||String(f.displayName).toLowerCase().includes(q)) &&
+ (filter==="all"||(filter==="selected"&&selected.has(String(f.userId)))||(filter==="remaining"&&!completed.has(String(f.userId)))||(filter==="done"&&completed.has(String(f.userId)))));
+ let sort=$("sort").value;a.sort((x,y)=>String(x[sort==="username"?"username":"displayName"]).localeCompare(String(y[sort==="username"?"username":"displayName"])));return a;
+}
+function render(){
+ const list=$("friends"),vis=visibleFriends();list.innerHTML="";
+ $("total").textContent=`${friends.length} friends · ${vis.length} shown`;$("count").textContent=`${selected.size} selected`;$("review").textContent=`Review (${selected.size})`;
+ if(!vis.length){list.innerHTML='<div class="empty">No friends match this view.<br>Import a CSV or load the demo list.</div>';return;}
+ vis.forEach(f=>{
+  const id=String(f.userId),is=selected.has(id),done=completed.has(id),el=document.createElement("div");el.className="friend"+(is?" selected":"");
+  const initials=(f.displayName||f.username||"?").trim().split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase();
+  el.innerHTML=`<div class="avatar">${safe(initials)}</div><div class="identity"><div class="display">${safe(f.displayName||f.username)} ${done?'✓':''}</div><div class="username">@${safe(f.username)}</div></div><input type="checkbox" aria-label="Select ${safe(f.username)}" ${is?"checked":""}>`;
+  el.querySelector("input").addEventListener("change",e=>{e.target.checked?selected.add(id):selected.delete(id);render();});
+  el.addEventListener("click",e=>{if(e.target.tagName==="INPUT")return;selected.has(id)?selected.delete(id):selected.add(id);render();});
+  list.appendChild(el);
+ });
+}
+function loadDemo(){friends=demoFriends.map(x=>({...x}));selected.clear();completed.clear();render();}
+$("demoBtn").onclick=loadDemo;
+$("search").addEventListener("input",render);$("sort").onchange=render;$("filter").onchange=render;
+$("selectAll").onclick=()=>{visibleFriends().forEach(f=>selected.add(String(f.userId)));render();};
+$("clear").onclick=()=>{selected.clear();render();};
+$("exportBtn").onclick=()=>{const data=[["userId","username","displayName","selected","markedRemoved"],...friends.map(f=>[f.userId,f.username,f.displayName,selected.has(String(f.userId)),completed.has(String(f.userId))])];const csv=data.map(row=>row.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n");download("friend-manager-list.csv",csv,"text/csv");};
+function download(name,data,type){const a=document.createElement("a"),url=URL.createObjectURL(new Blob([data],{type}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+$("csvFile").addEventListener("change",async e=>{
+ const file=e.target.files[0];if(!file)return;
+ try{const text=await file.text(),rows=parseCSV(text);if(!rows.length)throw Error("CSV is empty");
+  const headers=rows.shift().map(h=>h.trim().toLowerCase());const ix=k=>headers.indexOf(k);
+  if(ix("username")<0)throw Error("CSV must include a username column.");
+  const parsed=rows.filter(r=>r.some(v=>v.trim())).map((r,i)=>({userId:(ix("userid")>=0?r[ix("userid")]:"")?.trim()||`import-${i}-${r[ix("username")]}`,username:(r[ix("username")]||"").trim(),displayName:(ix("displayname")>=0?r[ix("displayname")]:"")?.trim()||r[ix("username")]?.trim()})).filter(f=>f.username);
+  if(!parsed.length)throw Error("No usernames found.");
+  friends=parsed;selected.clear();completed.clear();render();alert(`Imported ${friends.length} rows. Profile links without numeric user IDs will open Roblox user search.`);
+ }catch(err){alert("Could not import CSV: "+err.message)}e.target.value="";
+});
+function parseCSV(s){let rows=[],row=[],field="",quoted=false;for(let i=0;i<s.length;i++){let c=s[i];if(quoted){if(c==='"'&&s[i+1]==='"'){field+='"';i++}else if(c==='"')quoted=false;else field+=c;}else if(c==='"')quoted=true;else if(c===","){row.push(field);field=""}else if(c==="\n"){row.push(field.replace(/\r$/,""));rows.push(row);row=[];field=""}else field+=c;}if(field.length||row.length){row.push(field.replace(/\r$/,""));rows.push(row)}return rows;}
+function openReview(){const chosen=friends.filter(f=>selected.has(String(f.userId)));if(!chosen.length){alert("Select at least one friend first.");return;}const list=$("reviewList");list.innerHTML="";
+ chosen.forEach(f=>{const id=String(f.userId),el=document.createElement("div");el.className="review-item";el.innerHTML=`<div class="avatar">${safe((f.displayName||f.username).slice(0,1).toUpperCase())}</div><div class="identity"><div class="display">${safe(f.displayName||f.username)}</div><div class="username">@${safe(f.username)}</div><label><input type="checkbox" ${completed.has(id)?"checked":""}> Mark completed</label></div><button type="button">Open profile ↗</button>`;
+ el.querySelector("button").onclick=()=>window.open(profileUrl(f),"_blank","noopener");
+ el.querySelector("input").onchange=e=>{e.target.checked?completed.add(id):completed.delete(id);render();};
+ list.appendChild(el);
+ });
+ $("reviewStatus").textContent=`${chosen.filter(f=>completed.has(String(f.userId))).length} of ${chosen.length} marked completed. This is a checklist only; it cannot verify removal in Roblox.`;
+ $("modal").classList.remove("hidden");
+}
+$("review").onclick=openReview;$("closeModal").onclick=$("closeBottom").onclick=()=>$("modal").classList.add("hidden");
+$("openNext").onclick=()=>{const f=friends.find(x=>selected.has(String(x.userId))&&!completed.has(String(x.userId)));if(!f){$("reviewStatus").textContent="All selected profiles are marked complete.";return;}window.open(profileUrl(f),"_blank","noopener");$("reviewStatus").textContent=`Opened ${f.username}. Complete any removal in Roblox, then mark it completed here.`;};
+loadDemo();
+</script>
+</body>
+</html>
