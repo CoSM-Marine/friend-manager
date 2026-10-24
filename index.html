@@ -140,7 +140,7 @@ async function resolveUsernames(){
       const batch = unresolved.slice(start, start + 100);
       status(`Looking up batch ${Math.floor(start / 100) + 1}…`);
 
-      const response = await fetch("https://users.roblox.com/v1/users", {
+      const response = await fetch("https://rbx.jumpathy.dev/v2/api/users/v1/users", {
         method: "POST",
         headers: {
           "Accept": "application/json",
