@@ -120,6 +120,122 @@ async function fetchFriends(){
   }finally{$("fetchBtn").disabled=false;}
 }
 async function resolveUsernames(){
+
+  if(!friends.length){
+
+    status("Load your friend list first.");
+
+    return;
+
+  }
+
+  const unresolved = friends.filter(f => !f.username);
+
+  if(!unresolved.length){
+
+    status("All loaded friends already have usernames.");
+
+    return;
+
+  }
+
+  const btn = $("resolveBtn");
+
+  btn.disabled = true;
+
+  let updated = 0;
+
+  try {
+
+    for(let start = 0; start < unresolved.length; start += 100){
+
+      const batch = unresolved.slice(start, start + 100);
+
+      status(`Looking up batch ${Math.floor(start / 100) + 1}…`);
+
+      const response = await fetch(
+
+        "https://apis.roblox.com/user-profile-api/v1/user/profiles/get-profiles",
+
+        {
+
+          method: "POST",
+
+          headers: {
+
+            "Accept": "application/json",
+
+            "Content-Type": "application/json"
+
+          },
+
+          body: JSON.stringify({
+
+            userIds: batch.map(f => Number(f.userId)),
+
+            fields: ["names.username", "names.displayName"]
+
+          })
+
+        }
+
+      );
+
+      if(!response.ok){
+
+        throw new Error(`Roblox profile lookup returned HTTP ${response.status}.`);
+
+      }
+
+      const data = await response.json();
+
+      const byId = new Map(
+
+        (data.profileDetails || []).map(p => [String(p.userId), p])
+
+      );
+
+      for(const friend of batch){
+
+        const profile = byId.get(friend.userId);
+
+        if(!profile) continue;
+
+        const username = profile.names?.username || "";
+
+        const displayName = profile.names?.displayName || "";
+
+        if(username && friend.username !== username){
+
+          friend.username = username;
+
+          updated++;
+
+        }
+
+        if(displayName) friend.displayName = displayName;
+
+      }
+
+      render();
+
+    }
+
+    status(`Finished! Resolved ${updated} usernames. Export your CSV to save the results.`);
+
+  } catch(error) {
+
+    status("Roblox blocked or failed the lookup. Your friend list is still loaded.\n\nExport your CSV as a backup. Technical detail: " + error.message);
+
+  } finally {
+
+    btn.disabled = false;
+
+    render();
+
+  }
+
+}
   if(!friends.length){
     status("Load your friend list first.");
     return;
